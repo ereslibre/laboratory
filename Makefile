@@ -46,6 +46,7 @@ debian-disk: debian-disk-clean debian-disk-init
 	sudo mount -o bind /proc debian-base/proc
 	sudo mount -o bind /dev debian-base/dev
 	sudo mount -o bind /sys debian-base/sys
+	sudo mount -t tmpfs none debian-base/tmp
 	sudo cp /etc/resolv.conf debian-base/etc/
 	sudo mkdir -p debian-base/etc/network/interfaces.d
 	sudo bash -c 'echo "iface eth0 inet dhcp" > debian-base/etc/network/interfaces.d/eth0'
@@ -54,11 +55,11 @@ debian-disk: debian-disk-clean debian-disk-init
 	sudo bash -c 'echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
 	sudo bash -c 'echo "T0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100" >> debian-base/etc/inittab'
 	sudo chroot debian-base /bin/bash -c "passwd -d root"
-	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base
+	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base/tmp debian-base
 	sudo rmdir debian-base
 
 debian-disk-clean:
-	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base || true
+	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base/tmp debian-base || true
 	sudo umount debian-base; sudo rm -rf debian-base; rm debian.img || true
 
 debian-systemd-disk-init:
@@ -72,6 +73,7 @@ debian-systemd-disk: debian-systemd-disk-clean debian-systemd-disk-init
 	sudo mount -o bind /proc debian-systemd-base/proc
 	sudo mount -o bind /dev debian-systemd-base/dev
 	sudo mount -o bind /sys debian-systemd-base/sys
+	sudo mount -t tmpfs none debian-systemd-base/tmp
 	sudo cp /etc/resolv.conf debian-systemd-base/etc/
 	sudo mkdir -p debian-systemd-base/etc/network/interfaces.d
 	sudo bash -c 'echo "iface eth0 inet dhcp" > debian-systemd-base/etc/network/interfaces.d/eth0'
@@ -80,11 +82,11 @@ debian-systemd-disk: debian-systemd-disk-clean debian-systemd-disk-init
 	sudo bash -c 'echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> debian-systemd-base/etc/sysctl.conf'
 	sudo chroot debian-systemd-base /bin/bash -c "passwd -d root"
 	sudo chroot debian-systemd-base /bin/bash -c "systemctl enable getty@ttyS0.service"
-	sudo umount debian-systemd-base/proc debian-systemd-base/dev debian-systemd-base/sys debian-systemd-base
+	sudo umount debian-systemd-base/proc debian-systemd-base/dev debian-systemd-base/sys debian-systemd-base/tmp debian-systemd-base
 	sudo rmdir debian-systemd-base
 
 debian-systemd-disk-clean:
-	sudo umount debian-systemd-base/proc debian-systemd-base/dev debian-systemd-base/sys debian-systemd-base || true
+	sudo umount debian-systemd-base/proc debian-systemd-base/dev debian-systemd-base/sys debian-systemd-base/tmp debian-systemd-base || true
 	sudo umount debian-systemd-base; sudo rm -rf debian-systemd-base; rm debian-systemd.img || true
 
 clean: debian-systemd-disk-clean debian-disk-clean
