@@ -1,0 +1,6 @@
+[submodule "src/linux"]
+	path = src/linux
+	url = git@github.com:torvalds/linux.git
+[submodule "src/busybox"]
+	path = src/busybox
+	url = git://busybox.net/busybox.git
