@@ -71,7 +71,7 @@ debian-disk: debian-disk-clean debian-disk-init
 	sudo bash -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
 	sudo bash -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
 	sudo bash -c 'echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
-	sudo bash -c 'echo "T0:2345:respawn:/bin/bash" >> debian-base/etc/inittab'
+	sudo bash -c 'echo "T0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100" >> debian-base/etc/inittab'
 	sudo chroot debian-base /bin/bash -c "passwd -d root"
 	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base/tmp debian-base
 	sudo rmdir debian-base
