@@ -28,7 +28,7 @@ busybox-image: busybox
 	mkdir -pv initramfs/busybox/{bin,sbin,etc,proc,sys,tmp,usr/{bin,sbin}}
 	cp -av obj/busybox/_install/* initramfs/busybox
 	cp -av boot/init initramfs/busybox
-	cd initramfs/busybox && find . -print0 | cpio --null -ov --format=newc | gzip -9 > $(ROOT_DIR)/obj/initramfs.cpio.gz
+	cd initramfs/busybox && find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/initramfs.cpio.gz
 
 linux:
 	cd obj/linux && make -j4
