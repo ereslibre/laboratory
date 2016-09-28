@@ -43,7 +43,7 @@ run-debian-graphical:
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -append "root=/dev/sda rw"
 
 debian-disk-init:
-	dd if=/dev/zero of=debian.img bs=1G count=5
+	dd if=/dev/zero of=debian.img bs=1G count=1
 	mkfs.ext3 debian.img
 
 debian-disk: debian-disk-clean debian-disk-init
