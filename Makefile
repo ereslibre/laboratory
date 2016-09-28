@@ -50,10 +50,6 @@ debian-disk: debian-disk-clean debian-disk-init
 	mkdir -p debian-base
 	sudo mount -o loop debian.img debian-base
 	sudo debootstrap --variant=minbase --include=sysvinit-core,ifupdown,net-tools,dhcpcd5 sid debian-base
-	sudo mount -o bind /proc debian-base/proc
-	sudo mount -o bind /dev debian-base/dev
-	sudo mount -o bind /sys debian-base/sys
-	sudo mount -t tmpfs none debian-base/tmp
 	sudo cp boot/init debian-base
 	sudo cp /etc/resolv.conf debian-base/etc/
 	sudo mkdir -p debian-base/etc/network/interfaces.d
