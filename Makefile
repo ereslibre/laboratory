@@ -1,7 +1,7 @@
 all: run-debian-systemd
 
 run-busybox:
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -m 1024M -nographic -append "console=ttyS0" -enable-kvm
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0"
 
 busybox:
 	cd obj/busybox && make install
@@ -13,25 +13,25 @@ busybox-image: busybox
 	cd initramfs/busybox && find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../../obj/initramfs.cpio.gz
 
 linux:
-	cd obj/linux && make
+	cd obj/linux && make -j4
 
 run-debian:
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -nographic -append "console=ttyS0 root=/dev/sda rw" -enable-kvm
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0 root=/dev/sda rw"
 
 run-debian-curses:
-	qemu-system-x86_64 -curses -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -append "root=/dev/sda rw" -enable-kvm
+	qemu-system-x86_64 -curses -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -append "root=/dev/sda rw"
 
 run-debian-graphical:
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -append "root=/dev/sda rw" -enable-kvm
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -append "root=/dev/sda rw"
 
 run-debian-systemd:
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian-systemd.img -net nic -net user -m 1024M -nographic -append "console=ttyS0 root=/dev/sda rw" -enable-kvm
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian-systemd.img -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0 root=/dev/sda rw"
 
 run-debian-systemd-curses:
-	qemu-system-x86_64 -curses -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian-systemd.img -net nic -net user -m 1024M -append "root=/dev/sda rw" -enable-kvm
+	qemu-system-x86_64 -curses -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian-systemd.img -net nic -net user -m 1024M -smp 2 -append "root=/dev/sda rw"
 
 run-debian-systemd-graphical:
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian-systemd.img -net nic -net user -m 1024M -append "root=/dev/sda rw" -enable-kvm
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian-systemd.img -net nic -net user -m 1024M -smp 2 -append "root=/dev/sda rw"
 
 debian-disks: debian-disk debian-systemd-disk
 
