@@ -5,4 +5,4 @@ mount -t sysfs none /sys
 mount -t devtmpfs none /dev
 mount -t tmpfs none /tmp
 
-exec /bin/sh
+exec setsid -c /bin/sh
