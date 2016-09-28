@@ -60,7 +60,7 @@ debian-disk-init:
 debian-disk: debian-disk-clean debian-disk-init
 	mkdir -p debian-base
 	sudo mount -o loop debian.img debian-base
-	sudo debootstrap --variant=minbase --include=sysvinit-core,ifupdown,net-tools,isc-dhcp-client sid debian-base
+	sudo debootstrap --variant=minbase --include=sysvinit-core,ifupdown,net-tools,dhcpcd5 sid debian-base
 	sudo mount -o bind /proc debian-base/proc
 	sudo mount -o bind /dev debian-base/dev
 	sudo mount -o bind /sys debian-base/sys
@@ -72,7 +72,9 @@ debian-disk: debian-disk-clean debian-disk-init
 	sudo bash -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
 	sudo bash -c 'echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
 	sudo bash -c 'echo "T0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100" >> debian-base/etc/inittab'
+	sudo bash -c 'echo kernel > debian-base/etc/hostname'
 	sudo chroot debian-base /bin/bash -c "passwd -d root"
+	sudo chroot debian-base /bin/bash -c "update-rc.d dhcpcd defaults"
 	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base/tmp debian-base
 	sudo rmdir debian-base
 
@@ -87,7 +89,7 @@ debian-systemd-disk-init:
 debian-systemd-disk: debian-systemd-disk-clean debian-systemd-disk-init
 	mkdir -p debian-systemd-base
 	sudo mount -o loop debian-systemd.img debian-systemd-base
-	sudo debootstrap --variant=minbase --include=systemd-sysv,ifupdown,net-tools,isc-dhcp-client sid debian-systemd-base
+	sudo debootstrap --variant=minbase --include=systemd-sysv,ifupdown,net-tools,dhcpcd5 sid debian-systemd-base
 	sudo mount -o bind /proc debian-systemd-base/proc
 	sudo mount -o bind /dev debian-systemd-base/dev
 	sudo mount -o bind /sys debian-systemd-base/sys
@@ -98,8 +100,10 @@ debian-systemd-disk: debian-systemd-disk-clean debian-systemd-disk-init
 	sudo bash -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> debian-systemd-base/etc/sysctl.conf'
 	sudo bash -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> debian-systemd-base/etc/sysctl.conf'
 	sudo bash -c 'echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> debian-systemd-base/etc/sysctl.conf'
+	sudo bash -c 'echo kernel > debian-systemd-base/etc/hostname'
 	sudo chroot debian-systemd-base /bin/bash -c "passwd -d root"
 	sudo chroot debian-systemd-base /bin/bash -c "systemctl enable getty@ttyS0.service"
+	sudo chroot debian-systemd-base /bin/bash -c "update-rc.d dhcpcd defaults"
 	sudo umount debian-systemd-base/proc debian-systemd-base/dev debian-systemd-base/sys debian-systemd-base/tmp debian-systemd-base
 	sudo rmdir debian-systemd-base
 
