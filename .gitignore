@@ -4,3 +4,5 @@
 /obj
 /debian.img
 /debian-systemd.img
+/src/busybox
+/src/linux

@@ -1,16 +1,34 @@
-all: run-debian-systemd
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+
+all: run-debian
+
+init:
+	@echo "* Please, link your linux kernel sources to src/linux"
+	@echo "  $$ ln -sf ~/my-linux-sources src/linux"
+	@echo "      (or)"
+	@echo "  $$ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+	@echo "* Please, link your busybox sources to src/busybox"
+	@echo "  $$ ln -sf ~/my-busybox-sources src/busybox"
+	@echo "      (or)"
+	@echo "  $$ git clone git://busybox.net/busybox.git"
+	mkdir -p obj/linux obj/busybox
+	cd src/linux && make O=$(ROOT_DIR)/obj/linux x86_64_defconfig
+	cd src/linux && make O=$(ROOT_DIR)/obj/linux kvmconfig
+	cd src/busybox && make O=$(ROOT_DIR)/obj/busybox defconfig
+	echo "CONFIG_STATIC=y" >> $(ROOT_DIR)/obj/busybox/.config
 
 run-busybox:
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0"
 
 busybox:
-	cd obj/busybox && make install
+	mkdir -p obj/busybox
+	cd obj/busybox && make -j4 && make install
 
 busybox-image: busybox
-	mkdir -pv initramfs/busybox/{bin,sbin,etc,proc,sys,usr/{bin,sbin}}
+	mkdir -pv initramfs/busybox/{bin,sbin,etc,proc,sys,tmp,usr/{bin,sbin}}
 	cp -av obj/busybox/_install/* initramfs/busybox
 	cp -av initramfs/init initramfs/busybox
-	cd initramfs/busybox && find . -print0 | cpio --null -ov --format=newc | gzip -9 > ../../obj/initramfs.cpio.gz
+	cd initramfs/busybox && find . -print0 | cpio --null -ov --format=newc | gzip -9 > $(ROOT_DIR)/obj/initramfs.cpio.gz
 
 linux:
 	cd obj/linux && make -j4
@@ -53,7 +71,7 @@ debian-disk: debian-disk-clean debian-disk-init
 	sudo bash -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
 	sudo bash -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
 	sudo bash -c 'echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
-	sudo bash -c 'echo "T0:2345:respawn:/sbin/getty -L ttyS0 115200 vt100" >> debian-base/etc/inittab'
+	sudo bash -c 'echo "T0:2345:respawn:/bin/bash" >> debian-base/etc/inittab'
 	sudo chroot debian-base /bin/bash -c "passwd -d root"
 	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base/tmp debian-base
 	sudo rmdir debian-base
