@@ -17,6 +17,8 @@ init:
 	cd src/busybox && make O=$(ROOT_DIR)/obj/busybox defconfig
 	echo "CONFIG_STATIC=y" >> $(ROOT_DIR)/obj/busybox/.config
 
+images: busybox-image debian-image
+
 run-busybox:
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0"
 
@@ -42,11 +44,11 @@ run-debian-curses:
 run-debian-graphical:
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -append "root=/dev/sda rw"
 
-debian-disk-init:
+debian-image-init:
 	dd if=/dev/zero of=debian.img bs=1G count=1
 	mkfs.ext3 debian.img
 
-debian-disk: debian-disk-clean debian-disk-init
+debian-image: debian-image-clean debian-image-init
 	mkdir -p debian-base
 	sudo mount -o loop debian.img debian-base
 	sudo debootstrap --variant=minbase --include=ifupdown,net-tools,dhcpcd5 sid debian-base
@@ -60,8 +62,8 @@ debian-disk: debian-disk-clean debian-disk-init
 	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base/tmp debian-base
 	sudo rmdir debian-base
 
-debian-disk-clean:
+debian-image-clean:
 	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base/tmp debian-base || true
 	sudo umount debian-base; sudo rm -rf debian-base; rm debian.img || true
 
-clean: debian-disk-clean
+clean: debian-image-clean
