@@ -40,7 +40,7 @@ run-debian:
 
 debian-image-init:
 	dd if=/dev/zero of=debian.img bs=1G count=5
-	mkfs.ext3 debian.img
+	mkfs.ext4 debian.img
 
 debian-image: debian-image-clean debian-image-init
 	mkdir -p debian-base
