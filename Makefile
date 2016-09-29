@@ -39,7 +39,7 @@ run-debian:
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0 root=/dev/sda rw init=/init"
 
 debian-image-init:
-	dd if=/dev/zero of=debian.img bs=1G count=1
+	dd if=/dev/zero of=debian.img bs=1G count=5
 	mkfs.ext3 debian.img
 
 debian-image: debian-image-clean debian-image-init
