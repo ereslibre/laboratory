@@ -1,6 +1,6 @@
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-all: run-debian
+all: run-busybox
 
 init:
 	@echo "* Please, link your linux kernel sources to src/linux"
