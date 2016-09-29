@@ -53,11 +53,10 @@ debian-image: debian-image-clean debian-image-init
 	sudo bash -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
 	sudo bash -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
 	sudo bash -c 'echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> debian-base/etc/sysctl.conf'
-	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base/tmp debian-base
+	sudo umount debian-base
 	sudo rmdir debian-base
 
 debian-image-clean:
-	sudo umount debian-base/proc debian-base/dev debian-base/sys debian-base/tmp debian-base || true
 	sudo umount debian-base; sudo rm -rf debian-base; rm debian.img || true
 
 clean: debian-image-clean
