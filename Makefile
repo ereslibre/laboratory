@@ -24,7 +24,7 @@ run-busybox:
 
 busybox:
 	mkdir -p obj/busybox
-	cd obj/busybox && make -j8 && make install
+	cd obj/busybox && make -j4 && make install
 
 busybox-image: busybox
 	mkdir -pv initramfs/busybox/{bin,sbin,etc,proc,sys,tmp,usr/{bin,sbin}}
@@ -33,7 +33,7 @@ busybox-image: busybox
 	cd initramfs/busybox && find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/initramfs.cpio.gz
 
 linux:
-	cd obj/linux && make -j8
+	cd obj/linux && make -j4
 
 run-debian:
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 root=/dev/sda rw init=/init" -enable-kvm
