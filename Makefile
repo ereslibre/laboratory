@@ -20,10 +20,11 @@ init:
 images: busybox-image debian-image
 
 run-busybox:
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0"
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0 init=/init"
 
 busybox:
 	mkdir -p obj/busybox
+	sed -i -- 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/' $(ROOT_DIR)/obj/busybox/.config
 	cd obj/busybox && make -j4 && make install
 
 busybox-image: busybox
@@ -36,7 +37,7 @@ linux:
 	cd obj/linux && make -j4
 
 run-debian:
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0 root=/dev/sda init=/init rw"
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0 root=/dev/sda rw init=/init"
 
 run-debian-curses:
 	qemu-system-x86_64 -curses -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -append "root=/dev/sda rw"
