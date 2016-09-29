@@ -15,7 +15,7 @@ init:
 	cd src/linux && make O=$(ROOT_DIR)/obj/linux x86_64_defconfig
 	cd src/linux && make O=$(ROOT_DIR)/obj/linux kvmconfig
 	cd src/busybox && make O=$(ROOT_DIR)/obj/busybox defconfig
-	echo "CONFIG_STATIC=y" >> $(ROOT_DIR)/obj/busybox/.config
+	sed -i -- 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/' $(ROOT_DIR)/obj/busybox/.config
 
 images: busybox-image debian-image
 
@@ -24,7 +24,6 @@ run-busybox:
 
 busybox:
 	mkdir -p obj/busybox
-	sed -i -- 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/' $(ROOT_DIR)/obj/busybox/.config
 	cd obj/busybox && make -j4 && make install
 
 busybox-image: busybox
