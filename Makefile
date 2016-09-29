@@ -38,12 +38,6 @@ linux:
 run-debian:
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -nographic -append "console=ttyS0 root=/dev/sda rw init=/init"
 
-run-debian-curses:
-	qemu-system-x86_64 -curses -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -append "root=/dev/sda rw"
-
-run-debian-graphical:
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -m 1024M -smp 2 -append "root=/dev/sda rw"
-
 debian-image-init:
 	dd if=/dev/zero of=debian.img bs=1G count=1
 	mkfs.ext3 debian.img
