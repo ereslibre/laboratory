@@ -11,6 +11,10 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/opt/bi
 
 hostname kernel
 
+if [ -f /sbin/dhcpcd ]; then
+  dhcpcd eth0 > /dev/null 2>&1 &
+fi
+
 if [ -f /bin/bash ]; then
   exec setsid -c /bin/bash
 else
