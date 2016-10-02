@@ -14,10 +14,14 @@ init:
 	mkdir -p obj/linux obj/busybox
 	cd src/linux && make O=$(ROOT_DIR)/obj/linux x86_64_defconfig
 	cd src/linux && make O=$(ROOT_DIR)/obj/linux kvmconfig
+	sed -i -- 's/# CONFIG_DEBUG_KERNEL is not set/CONFIG_DEBUG_KERNEL=y/' $(ROOT_DIR)/obj/linux/.config
 	cd src/busybox && make O=$(ROOT_DIR)/obj/busybox defconfig
 	sed -i -- 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/' $(ROOT_DIR)/obj/busybox/.config
 
 images: busybox-image debian-image
+
+gdb:
+	gdb obj/linux/vmlinux
 
 run-busybox: linux
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s
