@@ -1,6 +1,7 @@
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-all: run-busybox
+all: busybox
+.PHONY: disks
 
 init:
 	@echo "* Please, link your linux kernel sources to src/linux"
@@ -15,6 +16,8 @@ init:
 	cd src/linux && make O=$(ROOT_DIR)/obj/linux x86_64_defconfig
 	cd src/linux && make O=$(ROOT_DIR)/obj/linux kvmconfig
 	sed -i -- 's/# CONFIG_DEBUG_KERNEL is not set/CONFIG_DEBUG_KERNEL=y/' $(ROOT_DIR)/obj/linux/.config
+	sed -i -- 's/# CONFIG_BTRFS_FS is not set/CONFIG_BTRFS_FS=y/' $(ROOT_DIR)/obj/linux/.config
+	sed -i -- 's/# CONFIG_XFS_FS is not set/CONFIG_XFS_FS=y/' $(ROOT_DIR)/obj/linux/.config
 	cd src/busybox && make O=$(ROOT_DIR)/obj/busybox defconfig
 	sed -i -- 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/' $(ROOT_DIR)/obj/busybox/.config
 
@@ -23,35 +26,38 @@ images: busybox-image debian-image
 gdb:
 	gdb obj/linux/vmlinux
 
-disk:
-	qemu-img create -f qcow2 disk.img 5G
+disks:
+	qemu-img create disks/ext4.img 5G
+	qemu-img create disks/btrfs.img 5G
+	qemu-img create disks/xfs.img 5G
+	parted -s disks/ext4.img -- mklabel msdos
+	parted -s disks/btrfs.img  -- mklabel msdos
+	parted -s disks/xfs.img  -- mklabel msdos
+	parted -s disks/ext4.img mkpart primary 0% 100%
+	parted -s disks/btrfs.img mkpart primary 0% 100%
+	parted -s disks/xfs.img mkpart primary 0% 100%
+	mkfs.ext4 -F disks/ext4.img
+	mkfs.btrfs -f disks/btrfs.img
+	mkfs.xfs -f disks/xfs.img
 
-run-busybox: linux disk
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disk.img
+busybox: busybox-image linux
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disks/ext4.img -hdb disks/btrfs.img -hdc disks/xfs.img
 
-run-busybox-current: disk
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disk.img
-
-busybox:
+busybox-image:
 	mkdir -p obj/busybox
 	cd obj/busybox && make -j3 && make install
-
-busybox-image: busybox
 	mkdir -pv initramfs/busybox/{bin,sbin,etc,proc,sys,tmp,usr/{bin,sbin}}
 	cp -av obj/busybox/_install/* initramfs/busybox
 	cp -av boot/init initramfs/busybox
 	cd initramfs/busybox && find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/initramfs.cpio.gz
 
-linux:
+linux: disks
 	cd obj/linux && make -j3 bzImage
 
 linux-all:
 	cd obj/linux && make -j3
 
-run-debian: linux
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 root=/dev/sda rw rootfstype=ext4 init=/init raid=noautodetect" -enable-kvm -s
-
-run-debian-current:
+debian: debian-image linux
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 root=/dev/sda rw rootfstype=ext4 init=/init raid=noautodetect" -enable-kvm -s
 
 debian-image-init:
