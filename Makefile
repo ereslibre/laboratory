@@ -55,6 +55,9 @@ alpine-image:
 	bash -c 'echo "iface lo inet loopback" >> obj/alpine/alpine/etc/network/interfaces'
 	bash -c 'echo "auto eth0" >> obj/alpine/alpine/etc/network/interfaces'
 	bash -c 'echo "iface eth0 inet dhcp" >> obj/alpine/alpine/etc/network/interfaces'
+	sudo bash -c 'echo "net.ipv6.conf.all.disable_ipv6 = 1" >> obj/alpine/alpine/etc/sysctl.conf'
+	sudo bash -c 'echo "net.ipv6.conf.default.disable_ipv6 = 1" >> obj/alpine/alpine/etc/sysctl.conf'
+	sudo bash -c 'echo "net.ipv6.conf.lo.disable_ipv6 = 1" >> obj/alpine/alpine/etc/sysctl.conf'
 	cd obj/alpine/alpine && sudo find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/alpine.cpio.gz
 
 busybox: busybox-image linux
