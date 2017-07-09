@@ -78,7 +78,7 @@ debian-image-init:
 debian-image: debian-image-clean debian-image-init
 	mkdir -p debian-base
 	sudo mount -o loop debian.img debian-base
-	sudo debootstrap --variant=minbase --include=ifupdown,net-tools,dhcpcd5 sid debian-base
+	sudo debootstrap --arch=amd64 --variant=minbase --include=ifupdown,net-tools,dhcpcd5 sid debian-base
 	sudo cp boot/init debian-base
 	sudo cp /etc/resolv.conf debian-base/etc/
 	sudo mkdir -p debian-base/etc/network/interfaces.d
