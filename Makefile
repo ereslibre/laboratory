@@ -17,7 +17,6 @@ init:
 	cd src/linux && make O=$(ROOT_DIR)/obj/linux kvmconfig
 	sed -i -- 's/# CONFIG_DEBUG_KERNEL is not set/CONFIG_DEBUG_KERNEL=y/' $(ROOT_DIR)/obj/linux/.config
 	sed -i -- 's/# CONFIG_BTRFS_FS is not set/CONFIG_BTRFS_FS=y/' $(ROOT_DIR)/obj/linux/.config
-	sed -i -- 's/# CONFIG_XFS_FS is not set/CONFIG_XFS_FS=y/' $(ROOT_DIR)/obj/linux/.config
 	cd src/busybox && make O=$(ROOT_DIR)/obj/busybox defconfig
 	sed -i -- 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/' $(ROOT_DIR)/obj/busybox/.config
 
@@ -29,16 +28,12 @@ gdb:
 disks:
 	qemu-img create disks/ext4.img 5G
 	qemu-img create disks/btrfs.img 5G
-	qemu-img create disks/xfs.img 5G
 	parted -s disks/ext4.img -- mklabel msdos
 	parted -s disks/btrfs.img  -- mklabel msdos
-	parted -s disks/xfs.img  -- mklabel msdos
 	parted -s disks/ext4.img mkpart primary 0% 100%
 	parted -s disks/btrfs.img mkpart primary 0% 100%
-	parted -s disks/xfs.img mkpart primary 0% 100%
 	mkfs.ext4 -F disks/ext4.img
 	mkfs.btrfs -f disks/btrfs.img
-	mkfs.xfs -f disks/xfs.img
 
 linux: disks
 	cd obj/linux && make -j3 bzImage
@@ -47,7 +42,7 @@ linux-all:
 	cd obj/linux && make -j3
 
 alpine: alpine-image linux
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/alpine.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disks/ext4.img -hdb disks/btrfs.img -hdc disks/xfs.img
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/alpine.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disks/ext4.img -hdb disks/btrfs.img
 
 alpine-image:
 	mkdir -p obj/alpine/alpine
@@ -63,7 +58,7 @@ alpine-image:
 	cd obj/alpine/alpine && sudo find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/alpine.cpio.gz
 
 busybox: busybox-image linux
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disks/ext4.img -hdb disks/btrfs.img -hdc disks/xfs.img
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disks/ext4.img -hdb disks/btrfs.img
 
 busybox-image:
 	mkdir -p obj/busybox
