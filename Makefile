@@ -40,6 +40,28 @@ disks:
 	mkfs.btrfs -f disks/btrfs.img
 	mkfs.xfs -f disks/xfs.img
 
+linux: disks
+	cd obj/linux && make -j3 bzImage
+
+linux-all:
+	cd obj/linux && make -j3
+
+alpine: alpine-image linux
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/alpine.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disks/ext4.img -hdb disks/btrfs.img -hdc disks/xfs.img
+
+alpine-image:
+	mkdir -p obj/alpine/alpine
+	wget -nc http://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/x86_64/alpine-minirootfs-3.6.2-x86_64.tar.gz -O obj/alpine/alpine-minirootfs-3.6.2-x86_64.tar.gz || true
+	cd obj/alpine && sudo tar -xpf alpine-minirootfs-3.6.2-x86_64.tar.gz -C alpine
+	sudo chown -R $(shell id -u):$(shell id -g) obj/alpine
+	cp boot/init obj/alpine/alpine
+	cp /etc/resolv.conf obj/alpine/alpine/etc/
+	bash -c 'echo "auto lo" > obj/alpine/alpine/etc/network/interfaces'
+	bash -c 'echo "iface lo inet loopback" >> obj/alpine/alpine/etc/network/interfaces'
+	bash -c 'echo "auto eth0" >> obj/alpine/alpine/etc/network/interfaces'
+	bash -c 'echo "iface eth0 inet dhcp" >> obj/alpine/alpine/etc/network/interfaces'
+	cd obj/alpine/alpine && sudo find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/alpine.cpio.gz
+
 busybox: busybox-image linux
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/initramfs.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disks/ext4.img -hdb disks/btrfs.img -hdc disks/xfs.img
 
@@ -50,12 +72,6 @@ busybox-image:
 	cp -av obj/busybox/_install/* initramfs/busybox
 	cp -av boot/init initramfs/busybox
 	cd initramfs/busybox && find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/initramfs.cpio.gz
-
-linux: disks
-	cd obj/linux && make -j3 bzImage
-
-linux-all:
-	cd obj/linux && make -j3
 
 debian: debian-image linux
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 root=/dev/sda rw rootfstype=ext4 init=/init raid=noautodetect" -enable-kvm -s

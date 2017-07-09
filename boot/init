@@ -11,8 +11,12 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 hostname kernel
 
+ifup eth0 &> /dev/null
+
 if [ -f /sbin/dhcpcd ]; then
   dhcpcd eth0 > /dev/null 2>&1 &
+elif [ -f /sbin/udhcpc ]; then
+  udhcpc eth0 > /dev/null 2>&1 &
 fi
 
 if [ -f /bin/bash ]; then
