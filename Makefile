@@ -55,6 +55,8 @@ alpine-image:
 	bash -c 'echo "iface lo inet loopback" >> obj/alpine/etc/network/interfaces'
 	bash -c 'echo "auto eth0" >> obj/alpine/etc/network/interfaces'
 	bash -c 'echo "iface eth0 inet dhcp" >> obj/alpine/etc/network/interfaces'
+	mkdir -p obj/alpine/usr/share/udhcpc
+	cp boot/udhcpc-default.script obj/alpine/usr/share/udhcpc/default.script
 	cd obj/alpine && sudo find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/alpine.cpio.gz
 
 busybox: busybox-image linux
@@ -66,27 +68,34 @@ busybox-image:
 	mkdir -pv initramfs/busybox/{bin,sbin,etc,proc,sys,tmp,usr/{bin,sbin}}
 	cp -av obj/busybox/_install/* initramfs/busybox
 	cp -av boot/init initramfs/busybox
+	mkdir -p initramfs/busybox/etc/network
+	bash -c 'echo "auto lo" > initramfs/busybox/etc/network/interfaces'
+	bash -c 'echo "iface lo inet loopback" >> initramfs/busybox/etc/network/interfaces'
+	bash -c 'echo "auto eth0" >> initramfs/busybox/etc/network/interfaces'
+	bash -c 'echo "iface eth0 inet dhcp" >> initramfs/busybox/etc/network/interfaces'
+	mkdir -p initramfs/busybox/usr/share/udhcpc
+	cp boot/udhcpc-default.script initramfs/busybox/usr/share/udhcpc/default.script
 	cd initramfs/busybox && find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/busybox.cpio.gz
 
 debian: debian-image linux
-	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda debian.img -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 root=/dev/sda rw rootfstype=ext4 init=/init raid=noautodetect" -enable-kvm -s
+	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -hda obj/debian.img -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 root=/dev/sda rw rootfstype=ext4 init=/init raid=noautodetect" -enable-kvm -s
 
 debian-image-init:
-	dd if=/dev/zero of=debian.img bs=1G count=5
-	mkfs.ext4 debian.img
+	dd if=/dev/zero of=obj/debian.img bs=1G count=5
+	mkfs.ext4 obj/debian.img
 
 debian-image: debian-image-clean debian-image-init
-	mkdir -p debian-base
-	sudo mount -o loop debian.img debian-base
-	sudo debootstrap --arch=amd64 --variant=minbase --include=ifupdown,net-tools,dhcpcd5 sid debian-base
-	sudo cp boot/init debian-base
-	sudo cp /etc/resolv.conf debian-base/etc/
-	sudo mkdir -p debian-base/etc/network/interfaces.d
-	sudo bash -c 'echo "iface eth0 inet dhcp" > debian-base/etc/network/interfaces.d/eth0'
-	sudo umount debian-base
-	sudo rmdir debian-base
+	mkdir -p obj/debian-base
+	sudo mount -o loop obj/debian.img obj/debian-base
+	sudo debootstrap --arch=amd64 --variant=minbase --include=ifupdown,net-tools,dhcpcd5 sid obj/debian-base
+	sudo cp boot/init obj/debian-base
+	sudo cp /etc/resolv.conf obj/debian-base/etc/
+	sudo mkdir -p obj/debian-base/etc/network/interfaces.d
+	sudo bash -c 'echo "iface eth0 inet dhcp" > obj/debian-base/etc/network/interfaces.d/eth0'
+	sudo umount obj/debian-base
+	sudo rmdir obj/debian-base
 
 debian-image-clean:
-	sudo umount debian-base; sudo rm -rf debian-base; rm debian.img || true
+	sudo umount obj/debian-base; sudo rm -rf obj/debian-base; rm obj/debian.img || true
 
 clean: debian-image-clean
