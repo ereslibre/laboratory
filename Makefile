@@ -26,15 +26,19 @@ images: busybox-image alpine-image debian-image
 gdb:
 	gdb obj/linux/vmlinux
 
-disks:
-	qemu-img create disks/ext4.img 5G
+disks: disks/ext4.img disks/btrfs.img
+
+disks/btrfs.img:
 	qemu-img create disks/btrfs.img 5G
-	parted -s disks/ext4.img -- mklabel msdos
 	parted -s disks/btrfs.img  -- mklabel msdos
-	parted -s disks/ext4.img mkpart primary 0% 100%
 	parted -s disks/btrfs.img mkpart primary 0% 100%
-	mkfs.ext4 -F disks/ext4.img
 	mkfs.btrfs -f disks/btrfs.img
+
+disks/ext4.img:
+	qemu-img create disks/ext4.img 5G
+	parted -s disks/ext4.img -- mklabel msdos
+	parted -s disks/ext4.img mkpart primary 0% 100%
+	mkfs.ext4 -F disks/ext4.img
 
 linux: disks
 	cd obj/linux && make -j3 bzImage
@@ -42,10 +46,10 @@ linux: disks
 linux-all:
 	cd obj/linux && make -j3
 
-alpine: alpine-image linux
+alpine: $(ROOT_DIR)/obj/alpine.cpio.gz linux
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/alpine.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disks/ext4.img -hdb disks/btrfs.img
 
-alpine-image:
+$(ROOT_DIR)/obj/alpine.cpio.gz:
 	mkdir -p obj/alpine
 	wget -nc http://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/x86_64/alpine-minirootfs-3.6.2-x86_64.tar.gz -O obj/alpine-minirootfs-3.6.2-x86_64.tar.gz || true
 	cd obj && sudo tar -xpf alpine-minirootfs-3.6.2-x86_64.tar.gz -C alpine
@@ -59,10 +63,10 @@ alpine-image:
 	cp boot/udhcpc-default.script obj/alpine/usr/share/udhcpc/default.script
 	cd obj/alpine && sudo find . -print0 | cpio --null -ov -R 0:0 --format=newc | gzip -9 > $(ROOT_DIR)/obj/alpine.cpio.gz
 
-busybox: busybox-image linux
+busybox: $(ROOT_DIR)/obj/busybox.cpio.gz linux
 	qemu-system-x86_64 -kernel obj/linux/arch/x86_64/boot/bzImage -initrd obj/busybox.cpio.gz -net nic -net user -cpu host -m 1024M -smp 4 -nographic -append "console=ttyS0 init=/init raid=noautodetect" -enable-kvm -s -hda disks/ext4.img -hdb disks/btrfs.img
 
-busybox-image:
+$(ROOT_DIR)/obj/busybox.cpio.gz:
 	mkdir -p obj/busybox
 	cd obj/busybox && make -j3 && make install
 	mkdir -pv initramfs/busybox/{bin,sbin,etc,proc,sys,tmp,usr/{bin,sbin}}
