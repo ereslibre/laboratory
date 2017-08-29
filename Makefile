@@ -26,7 +26,9 @@ images: busybox-image alpine-image debian-image
 gdb:
 	gdb obj/linux/vmlinux
 
-disks: disks/ext4.img disks/btrfs.img
+create-disks: disks/ext4.img disks/btrfs.img
+
+disks: create-disks unmount-disks
 
 disks/btrfs.img:
 	qemu-img create disks/btrfs.img 5G
@@ -39,6 +41,14 @@ disks/ext4.img:
 	parted -s disks/ext4.img -- mklabel msdos
 	parted -s disks/ext4.img mkpart primary 0% 100%
 	mkfs.ext4 -F disks/ext4.img
+
+mount-disks: create-disks
+	sudo mount -o loop disks/ext4.img disks/ext4
+	sudo mount -o loop disks/btrfs.img disks/btrfs
+
+unmount-disks:
+	sudo umount disks/ext4
+	sudo umount disks/btrfs
 
 linux: disks
 	cd obj/linux && make -j3 bzImage
