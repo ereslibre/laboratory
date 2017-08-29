@@ -47,8 +47,8 @@ mount-disks: create-disks
 	sudo mount -o loop disks/btrfs.img disks/btrfs
 
 unmount-disks:
-	sudo umount disks/ext4
-	sudo umount disks/btrfs
+	sudo umount disks/ext4 || true
+	sudo umount disks/btrfs || true
 
 linux: disks
 	cd obj/linux && make -j3 bzImage
