@@ -13,6 +13,12 @@ hostname kernel
 
 ifup eth0 &> /dev/null
 
+for disk in $(ls /dev/sd*); do
+  disk_name=$(echo $disk | cut -d/ -f3)
+  mkdir /mnt/$disk_name
+  mount $disk /mnt/$disk_name
+done
+
 if [ -f /bin/bash ]; then
   exec setsid -c /bin/bash
 else
