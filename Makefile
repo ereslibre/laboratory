@@ -17,6 +17,7 @@ init:
 	cd src/linux && make O=$(ROOT_DIR)/obj/linux kvmconfig
 	sed -i -- 's/# CONFIG_DEBUG_KERNEL is not set/CONFIG_DEBUG_KERNEL=y/' $(ROOT_DIR)/obj/linux/.config
 	sed -i -- 's/# CONFIG_BTRFS_FS is not set/CONFIG_BTRFS_FS=y/' $(ROOT_DIR)/obj/linux/.config
+	sed -i -- 's/# CONFIG_OVERLAY_FS is not set/CONFIG_OVERLAY_FS=y/' $(ROOT_DIR)/obj/linux/.config
 	sed -i -- 's/CONFIG_IPV6=y/# CONFIG_IPV6 is not set/' $(ROOT_DIR)/obj/linux/.config
 	cd src/busybox && make O=$(ROOT_DIR)/obj/busybox defconfig
 	sed -i -- 's/# CONFIG_STATIC is not set/CONFIG_STATIC=y/' $(ROOT_DIR)/obj/busybox/.config
